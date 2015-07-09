@@ -163,8 +163,7 @@ class TableGatewayTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($result));
 
         $statementExpectation = function ($insert) use ($phpunit, $expected, $statement) {
-            $state = $insert->getRawState();
-            $phpunit->assertSame($expected, $state['table']);
+            $phpunit->assertSame($expected, $insert->table);
             return $statement;
         };
 
@@ -194,11 +193,10 @@ class TableGatewayTest extends \PHPUnit_Framework_TestCase
             'foo' => 'FOO',
         ]);
 
-        $state = $insert->getRawState();
-        $this->assertInternalType('array', $state['table']);
+        $this->assertInternalType('array', $insert->table);
         $this->assertEquals(
             $tableValue,
-            $state['table']
+            $insert->table
         );
     }
 
@@ -225,8 +223,10 @@ class TableGatewayTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($result));
 
         $statementExpectation = function ($update) use ($phpunit, $expected, $statement) {
-            $state = $update->getRawState();
-            $phpunit->assertSame($expected, $state['table']);
+            if ($expected instanceof TableIdentifier) {
+                $expected = $expected->getTable();
+            }
+            $phpunit->assertSame($expected, $update->table->getSource()->getTable());
             return $statement;
         };
 
@@ -235,12 +235,12 @@ class TableGatewayTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $sql->expects($this->atLeastOnce())
             ->method('getTable')
-            ->will($this->returnValue($tableValue));
+            ->will($this->returnValue(TableSource::factory($tableValue)->getSource()));
         $sql->expects($this->once())
             ->method('update')
             ->will($this->returnValue($update));
         $sql->expects($this->once())
-            ->method('prepareStatementForSqlObject')
+            ->method('prepareSqlStatement')
             ->with($this->equalTo($update))
             ->will($this->returnCallback($statementExpectation));
 
@@ -258,11 +258,10 @@ class TableGatewayTest extends \PHPUnit_Framework_TestCase
             'bar' => 'BAR'
         ]);
 
-        $state = $update->getRawState();
-        $this->assertInternalType('array', $state['table']);
+        $this->assertInstanceOf('Zend\Db\Sql\TableSource', $update->table);
         $this->assertEquals(
-            $tableValue,
-            $state['table']
+            TableSource::factory($tableValue),
+            $update->table
         );
     }
 }

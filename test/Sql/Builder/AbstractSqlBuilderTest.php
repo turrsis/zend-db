@@ -7,40 +7,39 @@
  * @license   http://framework.zend.com/license/new-bsd New BSD License
  */
 
-namespace ZendTest\Db\Sql;
+namespace ZendTest\Db\Sql\Builder;
 
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\ExpressionInterface;
-use Zend\Db\Adapter\Driver\DriverInterface;
 use Zend\Db\Sql\Predicate;
 use Zend\Db\Sql\Select;
-use ZendTest\Db\TestAsset\TrustingSql92Platform;
+use Zend\Db\Adapter;
+use ZendTest\Db\TestAsset;
 use Zend\Db\Adapter\ParameterContainer;
+use Zend\Db\Sql\Builder;
 
-class AbstractSqlTest extends \PHPUnit_Framework_TestCase
+class AbstractSqlBuilderTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
-     */
-    protected $abstractSql = null;
+    protected $builder;
 
-    protected $mockDriver = null;
+    protected $adapter = null;
 
     public function setup()
     {
-        $this->abstractSql = $this->getMockForAbstractClass('Zend\Db\Sql\AbstractSql');
+        $this->builder = $this->getMockForAbstractClass('Zend\Db\Sql\Builder\AbstractSqlBuilder', [new Builder\Builder]);
 
-        $this->mockDriver = $this->getMock('Zend\Db\Adapter\Driver\DriverInterface');
-        $this->mockDriver
-            ->expects($this->any())
-            ->method('getPrepareType')
-            ->will($this->returnValue(DriverInterface::PARAMETERIZATION_NAMED));
-        $this->mockDriver
+        $mockDriver = $this->getMock('Zend\Db\Adapter\Driver\DriverInterface');
+        $mockDriver
             ->expects($this->any())
             ->method('formatParameterName')
-            ->will($this->returnCallback(function ($x) {
-                return ':' . $x;
-            }));
+            ->will($this->returnCallback(
+                function ($name) { return (':' . $name); }
+            ));
+
+        $this->adapter = new Adapter\Adapter(
+            $mockDriver,
+            new TestAsset\TrustingSql92Platform()
+        );
     }
 
     /**
@@ -63,30 +62,14 @@ class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         $expression = new Expression('? > ? AND y < ?', ['x', 5, 10], [Expression::TYPE_IDENTIFIER]);
         $sqlAndParams = $this->invokeProcessExpressionMethod($expression, $parameterContainer);
 
-        $parameters = $parameterContainer->getNamedArray();
-
-        $this->assertRegExp('#"x" > :expr\d\d\d\dParam1 AND y < :expr\d\d\d\dParam2#', $sqlAndParams);
-
-        // test keys and values
-        preg_match('#expr(\d\d\d\d)Param1#', key($parameters), $matches);
-        $expressionNumber = $matches[1];
-
-        $this->assertRegExp('#expr\d\d\d\dParam1#', key($parameters));
-        $this->assertEquals(5, current($parameters));
-        next($parameters);
-        $this->assertRegExp('#expr\d\d\d\dParam2#', key($parameters));
-        $this->assertEquals(10, current($parameters));
-
-        // ensure next invocation increases number by 1
-        $parameterContainer = new ParameterContainer;
-        $sqlAndParamsNext = $this->invokeProcessExpressionMethod($expression, $parameterContainer);
-
-        $parameters = $parameterContainer->getNamedArray();
-
-        preg_match('#expr(\d\d\d\d)Param1#', key($parameters), $matches);
-        $expressionNumberNext = $matches[1];
-
-        $this->assertEquals(1, (int) $expressionNumberNext - (int) $expressionNumber);
+        $this->assertEquals('"x" > :expr1 AND y < :expr2', $sqlAndParams);
+        $this->assertEquals(
+            [
+                'expr1' => 5,
+                'expr2' => 10,
+            ],
+            $parameterContainer->getNamedArray()
+        );
     }
 
     /**
@@ -141,46 +124,19 @@ class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expressionString, $sqlString);
     }
 
-    public function testProcessExpressionWorksWithNamedParameterPrefix()
-    {
-        $parameterContainer = new ParameterContainer();
-        $namedParameterPrefix = uniqid();
-        $expression = new Expression('FROM_UNIXTIME(?)', [10000000]);
-        $this->invokeProcessExpressionMethod($expression, $parameterContainer, $namedParameterPrefix);
-
-        $this->assertSame($namedParameterPrefix . '1', key($parameterContainer->getNamedArray()));
-    }
-
-    public function testProcessExpressionWorksWithNamedParameterPrefixContainingWhitespace()
-    {
-        $parameterContainer = new ParameterContainer();
-        $namedParameterPrefix = "string\ncontaining white space";
-        $expression = new Expression('FROM_UNIXTIME(?)', [10000000]);
-        $this->invokeProcessExpressionMethod($expression, $parameterContainer, $namedParameterPrefix);
-
-        $this->assertSame('string__containing__white__space1', key($parameterContainer->getNamedArray()));
-    }
-
     /**
      * @param \Zend\Db\Sql\ExpressionInterface $expression
-     * @param \Zend\Db\Adapter\ParameterContainer $parameterContainer
-     * @param string $namedParameterPrefix
-     * @return \Zend\Db\Adapter\StatementContainer|string
+     * @param \Zend\Db\Adapter\Adapter|null $adapter
+     * @return \Zend\Db\Adapter\StatementContainer
      */
-    protected function invokeProcessExpressionMethod(
-        ExpressionInterface $expression,
-        $parameterContainer = null,
-        $namedParameterPrefix = null
-    ) {
-        $method = new \ReflectionMethod($this->abstractSql, 'processExpression');
+    protected function invokeProcessExpressionMethod(ExpressionInterface $expression, $parameterContainer = null)
+    {
+        $method = new \ReflectionMethod($this->builder, 'buildExpression');
         $method->setAccessible(true);
         return $method->invoke(
-            $this->abstractSql,
+            $this->builder,
             $expression,
-            new TrustingSql92Platform,
-            $this->mockDriver,
-            $parameterContainer,
-            $namedParameterPrefix
+            new Builder\Context($this->adapter, $parameterContainer)
         );
     }
 }

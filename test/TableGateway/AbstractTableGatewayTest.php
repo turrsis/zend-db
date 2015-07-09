@@ -10,7 +10,7 @@
 namespace ZendTest\Db\TableGateway;
 
 use Zend\Db\TableGateway\AbstractTableGateway;
-use Zend\Db\Sql;
+use Zend\Db\Adapter\ParameterContainer;
 use Zend\Db\ResultSet\ResultSet;
 
 /**
@@ -22,6 +22,11 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      * @var \PHPUnit_Framework_MockObject_Generator
      */
     protected $mockAdapter = null;
+
+    /**
+     * @var \Zend\Db\Adapter\Driver\StatementInterface
+     */
+    protected $mockStatement;
 
     /**
      * @var \PHPUnit_Framework_MockObject_Generator
@@ -43,22 +48,30 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
         $mockResult = $this->getMock('Zend\Db\Adapter\Driver\ResultInterface');
         $mockResult->expects($this->any())->method('getAffectedRows')->will($this->returnValue(5));
 
-        $mockStatement = $this->getMock('Zend\Db\Adapter\Driver\StatementInterface');
-        $mockStatement->expects($this->any())->method('execute')->will($this->returnValue($mockResult));
+        $this->mockStatement = $this->getMock('Zend\Db\Adapter\Driver\StatementInterface');
+        $stmtSQL = function ($sql = null) {
+            static $data;
+            if ($sql === null) {
+                return $data;
+            }
+            $data = $sql;
+        };
+
+        $this->mockStatement->expects($this->any())->method('setSql')->will($this->returnCallback($stmtSQL));
+        $this->mockStatement->expects($this->any())->method('getSql')->will($this->returnCallback($stmtSQL));
+        $this->mockStatement->expects($this->any())->method('execute')->will($this->returnValue($mockResult));
+        $this->mockStatement->expects($this->any())->method('getParameterContainer')->will($this->returnValue(new ParameterContainer));
 
         $mockConnection = $this->getMock('Zend\Db\Adapter\Driver\ConnectionInterface');
         $mockConnection->expects($this->any())->method('getLastGeneratedValue')->will($this->returnValue(10));
 
         $mockDriver = $this->getMock('Zend\Db\Adapter\Driver\DriverInterface');
-        $mockDriver->expects($this->any())->method('createStatement')->will($this->returnValue($mockStatement));
+        $mockDriver->expects($this->any())->method('createStatement')->will($this->returnValue($this->mockStatement));
         $mockDriver->expects($this->any())->method('getConnection')->will($this->returnValue($mockConnection));
+        $mockDriver->expects($this->any())->method('formatParameterName')->will($this->returnValue('?'));
 
         $this->mockAdapter = $this->getMock('Zend\Db\Adapter\Adapter', null, [$mockDriver]);
-        $this->mockSql = $this->getMock('Zend\Db\Sql\Sql', ['select', 'insert', 'update', 'delete'], [$this->mockAdapter, 'foo']);
-        $this->mockSql->expects($this->any())->method('select')->will($this->returnValue($this->getMock('Zend\Db\Sql\Select', ['where', 'getRawSate'], ['foo'])));
-        $this->mockSql->expects($this->any())->method('insert')->will($this->returnValue($this->getMock('Zend\Db\Sql\Insert', ['prepareStatement', 'values'], ['foo'])));
-        $this->mockSql->expects($this->any())->method('update')->will($this->returnValue($this->getMock('Zend\Db\Sql\Update', ['where'], ['foo'])));
-        $this->mockSql->expects($this->any())->method('delete')->will($this->returnValue($this->getMock('Zend\Db\Sql\Delete', ['where'], ['foo'])));
+        $this->mockSql = new \Zend\Db\Sql\Sql($this->mockAdapter, 'foo');
 
         $this->table = $this->getMockForAbstractClass(
             'Zend\Db\TableGateway\AbstractTableGateway'
@@ -136,6 +149,7 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
         // check return types
         $this->assertInstanceOf('Zend\Db\ResultSet\ResultSet', $resultSet);
         $this->assertNotSame($this->table->getResultSetPrototype(), $resultSet);
+        $this->assertEquals('SELECT "foo".* FROM "foo"', $this->mockStatement->getSql());
     }
 
     /**
@@ -145,21 +159,9 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function testSelectWithWhereString()
     {
-        $mockSelect = $this->mockSql->select();
-
-        $mockSelect->expects($this->any())
-            ->method('getRawState')
-            ->will($this->returnValue([
-                'table' => $this->table->getTable(),
-                ])
-            );
-
-        // assert select::from() is called
-        $mockSelect->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('foo'));
-
-        $this->table->select('foo');
+        $resultSet = $this->table->select('whereCondition');
+        $this->assertInstanceOf('Zend\Db\ResultSet\ResultSet', $resultSet);
+        $this->assertEquals('SELECT "foo".* FROM "foo" WHERE whereCondition', $this->mockStatement->getSql());
     }
 
     /**
@@ -183,27 +185,18 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
     {
         // Case 1
 
-        $select1 = $this->getMock('Zend\Db\Sql\Select', ['getRawState']);
-        $select1->expects($this->once())
-            ->method('getRawState')
-            ->will($this->returnValue([
-                'table' => 'foo',               // Standard table name format, valid according to Select::from()
-                'columns' => null,
-            ]));
+        $select1 = new \Zend\Db\Sql\Select('bat');
+
         $return = $this->table->selectWith($select1);
         $this->assertNotNull($return);
+        $this->assertEquals('SELECT "bat".* FROM "bat"', $this->mockStatement->getSql());
 
         // Case 2
 
-        $select1 = $this->getMock('Zend\Db\Sql\Select', ['getRawState']);
-        $select1->expects($this->once())
-            ->method('getRawState')
-            ->will($this->returnValue([
-                'table' => ['f' => 'foo'], // Alias table name format, valid according to Select::from()
-                'columns' => null,
-            ]));
+        $select1 = new \Zend\Db\Sql\Select(['f' => 'foo']);
         $return = $this->table->selectWith($select1);
         $this->assertNotNull($return);
+        $this->assertEquals('SELECT "f".* FROM "foo" AS "f"', $this->mockStatement->getSql());
     }
 
     /**
@@ -213,19 +206,9 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function testInsert()
     {
-        $mockInsert = $this->mockSql->insert();
-
-        $mockInsert->expects($this->once())
-            ->method('prepareStatement')
-            ->with($this->mockAdapter);
-
-
-        $mockInsert->expects($this->once())
-            ->method('values')
-            ->with($this->equalTo(['foo' => 'bar']));
-
         $affectedRows = $this->table->insert(['foo' => 'bar']);
         $this->assertEquals(5, $affectedRows);
+        $this->assertEquals('INSERT INTO "foo" ("foo") VALUES (?)', $this->mockStatement->getSql());
     }
 
     /**
@@ -235,15 +218,9 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpdate()
     {
-        $mockUpdate = $this->mockSql->update();
-
-        // assert select::from() is called
-        $mockUpdate->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('id = 2'));
-
         $affectedRows = $this->table->update(['foo' => 'bar'], 'id = 2');
         $this->assertEquals(5, $affectedRows);
+        $this->assertEquals('UPDATE "foo" SET "foo" = ? WHERE id = 2', $this->mockStatement->getSql());
     }
 
     /**
@@ -253,10 +230,9 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpdateWithNoCriteria()
     {
-        $mockUpdate = $this->mockSql->update();
-
         $affectedRows = $this->table->update(['foo' => 'bar']);
         $this->assertEquals(5, $affectedRows);
+        $this->assertEquals('UPDATE "foo" SET "foo" = ?', $this->mockStatement->getSql());
     }
 
     /**
@@ -266,15 +242,9 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function testDelete()
     {
-        $mockDelete = $this->mockSql->delete();
-
-        // assert select::from() is called
-        $mockDelete->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('foo'));
-
-        $affectedRows = $this->table->delete('foo');
+        $affectedRows = $this->table->delete('whereCondition');
         $this->assertEquals(5, $affectedRows);
+        $this->assertEquals('DELETE FROM "foo" WHERE whereCondition', $this->mockStatement->getSql());
     }
 
     /**
@@ -284,6 +254,7 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
     {
         $this->table->insert(['foo' => 'bar']);
         $this->assertEquals(10, $this->table->getLastInsertValue());
+        $this->assertEquals('INSERT INTO "foo" ("foo") VALUES (?)', $this->mockStatement->getSql());
     }
 
     /**
@@ -291,11 +262,11 @@ class AbstractTableGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function test__get()
     {
-        $this->table->insert(['foo']); // trigger last insert id update
-
+        $affectedRows = $this->table->insert(['foo' => 'bar']); // trigger last insert id update
+        $this->assertEquals('INSERT INTO "foo" ("foo") VALUES (?)', $this->mockStatement->getSql());
+        $this->assertEquals(5, $affectedRows);
         $this->assertEquals(10, $this->table->lastInsertValue);
         $this->assertSame($this->mockAdapter, $this->table->adapter);
-        //$this->assertEquals('foo', $this->table->table);
     }
 
     /**

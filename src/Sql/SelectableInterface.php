@@ -7,14 +7,8 @@
  * @license   http://framework.zend.com/license/new-bsd New BSD License
  */
 
-namespace Zend\Db\Sql\Builder;
+namespace Zend\Db\Sql;
 
-interface PlatformDecoratorInterface
+interface SelectableInterface extends SqlInterface
 {
-    /**
-     * @param $subject
-     *
-     * @return self
-     */
-    public function setSubject($subject);
 }

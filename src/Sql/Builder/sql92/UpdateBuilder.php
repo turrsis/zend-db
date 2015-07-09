@@ -15,55 +15,73 @@ use Zend\Db\Sql\Builder\Context;
 
 class UpdateBuilder extends AbstractSqlBuilder
 {
-    const SPECIFICATION_UPDATE = 'update';
-    const SPECIFICATION_WHERE = 'where';
-
-    protected $specifications = [
-        self::SPECIFICATION_UPDATE => 'UPDATE %1$s SET %2$s',
-        self::SPECIFICATION_WHERE => 'WHERE %1$s'
+    protected $updateSpecification = [
+        'byArgNumber' => [
+            2 => [
+                'forEach' => '%1$s = %2$s',
+                'implode' => ', ',
+            ],
+        ],
+        'format' => 'UPDATE %1$s SET %2$s',
     ];
+    protected $whereSpecification = 'WHERE %1$s';
 
     /**
      * @param Update $sqlObject
      * @param Context $context
-     * @return string
+     * @return array
      */
-    protected function build_Update(Update $sqlObject, Context $context)
+    public function build($sqlObject, Context $context)
     {
-        $setSql = [];
-        foreach ($sqlObject->set as $column => $value) {
-            $prefix = $context->getPlatform()->quoteIdentifier($column) . ' = ';
-            if (is_scalar($value) && $context->getParameterContainer()) {
-                $setSql[] = $prefix . $context->getDriver()->formatParameterName($column);
-                $context->getParameterContainer()->offsetSet($column, $value);
-            } else {
-                $setSql[] = $prefix . $this->resolveColumnValue(
-                    $value,
-                    $context
-                );
-            }
-        }
-
-        return sprintf(
-            $this->specifications[self::SPECIFICATION_UPDATE],
-            $this->resolveTable($sqlObject->table, $context),
-            implode(', ', $setSql)
-        );
+        $this->validateSqlObject($sqlObject, 'Zend\Db\Sql\Update', __METHOD__);
+        return [
+            $this->build_Update($sqlObject, $context),
+            $this->build_Where($sqlObject, $context),
+        ];
     }
 
     /**
      * @param Update $sqlObject
      * @param Context $context
-     * @return string|null
+     * @return array
+     */
+    protected function build_Update(Update $sqlObject, Context $context)
+    {
+        $setSql = [];
+        foreach ($sqlObject->set as $column => $value) {
+            if (is_scalar($value) && $context->getParameterContainer()) {
+                $context->getParameterContainer()->offsetSet($column, $value);
+                $value = $context->getDriver()->formatParameterName($column);
+            } else {
+                $value = $this->resolveColumnValue($value, $context);
+            }
+            $setSql[] = [
+                $context->getPlatform()->quoteIdentifier($column),
+                $value
+            ];
+        }
+        return [
+            'spec' => $this->updateSpecification,
+            'params' => [
+                $this->nornalizeTable($sqlObject->table, $context)['name'],
+                $setSql
+            ],
+        ];
+    }
+
+    /**
+     * @param Update $sqlObject
+     * @param Context $context
+     * @return array|null
      */
     protected function build_Where(Update $sqlObject, Context $context)
     {
         if ($sqlObject->where->count() == 0) {
             return;
         }
-        return sprintf(
-            $this->specifications[self::SPECIFICATION_WHERE],
-            $this->buildSqlString($sqlObject->where, $context)
-        );
+        return [
+            'spec' => $this->whereSpecification,
+            'params' => $sqlObject->where
+        ];
     }
 }

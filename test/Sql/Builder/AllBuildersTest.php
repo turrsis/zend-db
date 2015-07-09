@@ -60,28 +60,28 @@ class AllBuildersTest extends AbstractTestCase
                             'Zend\Db\Sql\Insert' => 'ZendTest\Db\TestAsset\InsertBuilder', // Decorator for root sqlObject
                             'Zend\Db\Sql\Select' => ['Zend\Db\Sql\Builder\sql92\SelectBuilder', '{=SELECT_Sql92=}']
                         ],
-                        'string' => 'INSERT INTO "foo"  {=SELECT_Sql92=}',
+                        'string' => 'INSERT INTO "foo" ({=SELECT_Sql92=})',
                     ],
                     'MySql'     => [
                         'decorators' => [
                             'Zend\Db\Sql\Insert' => 'ZendTest\Db\TestAsset\InsertBuilder', // Decorator for root sqlObject
                             'Zend\Db\Sql\Select' => ['Zend\Db\Sql\Builder\sql92\SelectBuilder', '{=SELECT_MySql=}']
                         ],
-                        'string' => 'INSERT INTO `foo`  {=SELECT_MySql=}',
+                        'string' => 'INSERT INTO `foo` ({=SELECT_MySql=})',
                     ],
                     'Oracle'    => [
                         'decorators' => [
                             'Zend\Db\Sql\Insert' => 'ZendTest\Db\TestAsset\InsertBuilder', // Decorator for root sqlObject
                             'Zend\Db\Sql\Select' => ['Zend\Db\Sql\Builder\sql92\SelectBuilder', '{=SELECT_Oracle=}']
                         ],
-                        'string' => 'INSERT INTO "foo"  {=SELECT_Oracle=}',
+                        'string' => 'INSERT INTO "foo" ({=SELECT_Oracle=})',
                     ],
                     'SqlServer' => [
                         'decorators' => [
                             'Zend\Db\Sql\Insert' => 'ZendTest\Db\TestAsset\InsertBuilder', // Decorator for root sqlObject
                             'Zend\Db\Sql\Select' => ['Zend\Db\Sql\Builder\sql92\SelectBuilder', '{=SELECT_SqlServer=}']
                         ],
-                        'string' => 'INSERT INTO [foo]  {=SELECT_SqlServer=}',
+                        'string' => 'INSERT INTO [foo] ({=SELECT_SqlServer=})',
                     ],
                 ],
             ],

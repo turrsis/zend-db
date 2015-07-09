@@ -29,13 +29,13 @@ class Sql
      * @param null|string|array|TableIdentifier $table
      * @param null|Platform\AbstractPlatform    $sqlPlatform @deprecated since version 3.0
      */
-    public function __construct(AdapterInterface $adapter, $table = null, Platform\AbstractPlatform $sqlPlatform = null)
+    public function __construct(AdapterInterface $adapter, $table = null, Builder\AbstractBuilder $sqlPlatform = null)
     {
         $this->adapter = $adapter;
         if ($table) {
             $this->setTable($table);
         }
-        $this->sqlPlatform = $sqlPlatform ?: new Platform\Platform($adapter);
+        $this->sqlPlatform = $sqlPlatform ?: new Builder\Builder($adapter);
     }
 
     /**

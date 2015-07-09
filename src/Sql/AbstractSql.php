@@ -12,7 +12,7 @@ namespace Zend\Db\Sql;
 use Zend\Db\Adapter\Driver\DriverInterface;
 use Zend\Db\Adapter\ParameterContainer;
 use Zend\Db\Adapter\Platform\PlatformInterface;
-use Zend\Db\Sql\Platform\PlatformDecoratorInterface;
+use Zend\Db\Sql\Builder\PlatformDecoratorInterface;
 use Zend\Db\Adapter\Platform\Sql92 as DefaultAdapterPlatform;
 
 abstract class AbstractSql implements SqlInterface

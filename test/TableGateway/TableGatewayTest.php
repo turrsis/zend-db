@@ -184,7 +184,7 @@ class TableGatewayTest extends \PHPUnit_Framework_TestCase
             ->method('insert')
             ->will($this->returnValue($insert));
         $sql->expects($this->once())
-            ->method('prepareStatementForSqlObject')
+            ->method('prepareSqlStatement')
             ->with($this->equalTo($insert))
             ->will($this->returnCallback($statementExpectation));
 

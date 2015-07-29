@@ -63,7 +63,7 @@ class UpdateBuilder extends AbstractSqlBuilder
         return [
             'spec' => $this->updateSpecification,
             'params' => [
-                $this->nornalizeTable($sqlObject->table, $context)['name'],
+                $sqlObject->table,
                 $setSql
             ],
         ];

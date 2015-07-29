@@ -12,7 +12,7 @@ namespace Zend\Db\Sql;
 use Zend\Stdlib\PriorityList;
 
 /**
- * @property null|string|array|TableIdentifier $table
+ * @property TableSource $table
  * @property PriorityList $set
  * @property Where $where
  */
@@ -22,7 +22,7 @@ class Update extends AbstractSql implements PreparableSqlInterface
     const VALUES_SET   = 'set';
 
     /**
-     * @var string|TableIdentifier
+     * @var TableSource
      */
     protected $table = '';
 
@@ -45,14 +45,12 @@ class Update extends AbstractSql implements PreparableSqlInterface
     /**
      * Constructor
      *
-     * @param  null|string|TableIdentifier $table
+     * @param  null|string|array|TableIdentifier|TableSource $table
      */
     public function __construct($table = null)
     {
         parent::__construct();
-        if ($table) {
-            $this->table($table);
-        }
+        $this->table($table);
         $this->where = new Where();
         $this->set = new PriorityList();
         $this->set->isLIFO(false);
@@ -61,12 +59,12 @@ class Update extends AbstractSql implements PreparableSqlInterface
     /**
      * Specify table for statement
      *
-     * @param  string|TableIdentifier $table
+     * @param  string|array|TableIdentifier|TableSource $table
      * @return self
      */
     public function table($table)
     {
-        $this->table = $table;
+        $this->table = TableSource::factory($table);
         return $this;
     }
 
@@ -80,7 +78,7 @@ class Update extends AbstractSql implements PreparableSqlInterface
      */
     public function set(array $values, $flag = self::VALUES_SET)
     {
-        if ($values === null) {
+        if ($values == null) {
             throw new Exception\InvalidArgumentException('set() expects an array of values');
         }
 
@@ -124,6 +122,7 @@ class Update extends AbstractSql implements PreparableSqlInterface
      */
     public function __clone()
     {
+        $this->table = clone $this->table;
         $this->where = clone $this->where;
         $this->set = clone $this->set;
     }

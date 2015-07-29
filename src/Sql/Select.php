@@ -11,7 +11,7 @@ namespace Zend\Db\Sql;
 
 /**
  *
- * @property null|string|array|TableIdentifier $table
+ * @property TableSource $table
  * @property string|Expression $quantifier DISTINCT|ALL
  * @property array $columns
  * @property $joins
@@ -49,15 +49,10 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
     /**
      * @var bool
      */
-    protected $tableReadOnly = false;
-
-    /**
-     * @var bool
-     */
     protected $prefixColumnsWithTable = true;
 
     /**
-     * @var string|array|TableIdentifier
+     * @var TableSource
      */
     protected $table = null;
 
@@ -128,16 +123,12 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
     /**
      * Constructor
      *
-     * @param  null|string|array|TableIdentifier $table
+     * @param  null|string|array|TableIdentifier|TableSource $table
      */
     public function __construct($table = null)
     {
         parent::__construct();
-        if ($table) {
-            $this->from($table);
-            $this->tableReadOnly = true;
-        }
-
+        $this->from($table);
         $this->where = new Where;
         $this->having = new Having;
     }
@@ -145,25 +136,12 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
     /**
      * Create from clause
      *
-     * @param  string|array|TableIdentifier $table
-     * @throws Exception\InvalidArgumentException
-     * @return Select
+     * @param  string|array|TableIdentifier|TableSource $table
+     * @return self
      */
     public function from($table)
     {
-        if ($this->tableReadOnly) {
-            throw new Exception\InvalidArgumentException('Since this object was created with a table and/or schema in the constructor, it is read only.');
-        }
-
-        if (!is_string($table) && !is_array($table) && !$table instanceof TableIdentifier) {
-            throw new Exception\InvalidArgumentException('$table must be a string, array, or an instance of TableIdentifier');
-        }
-
-        if (is_array($table) && (!is_string(key($table)) || count($table) !== 1)) {
-            throw new Exception\InvalidArgumentException('from() expects $table as an array is a single element associative array');
-        }
-
-        $this->table = $table;
+        $this->table = TableSource::factory($table);
         return $this;
     }
 
@@ -211,25 +189,19 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
     /**
      * Create join clause
      *
-     * @param string|array $name
+     * @param string|array|TableIdentifier|TableSource $name
      * @param string $on
      * @param string|array $columns
      * @param  string $type one of the JOIN_* constants
      * @return self
-     * @throws Exception\InvalidArgumentException
      */
     public function join($name, $on, $columns = self::SQL_STAR, $type = self::JOIN_INNER)
     {
-        if (is_array($name) && (!is_string(key($name)) || count($name) !== 1)) {
-            throw new Exception\InvalidArgumentException(
-                sprintf("join() expects '%s' as an array is a single element associative array", array_shift($name))
-            );
-        }
         if (!is_array($columns)) {
             $columns = [$columns];
         }
         $this->joins[] = [
-            'name'    => $name,
+            'name'    => TableSource::factory($name),
             'on'      => $on,
             'columns' => $columns,
             'type'    => $type
@@ -376,12 +348,7 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
     {
         switch ($name) {
             case 'table':
-                if ($this->tableReadOnly) {
-                    throw new Exception\InvalidArgumentException(
-                        'Since this object was created with a table and/or schema in the constructor, it is read only.'
-                    );
-                }
-                $this->table = null;
+                $this->table = TableSource::factory(null);
                 break;
             case 'quantifier':
                 $this->quantifier = null;
@@ -425,16 +392,6 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
     }
 
     /**
-     * Returns whether the table is read only or not.
-     *
-     * @return bool
-     */
-    public function isTableReadOnly()
-    {
-        return $this->tableReadOnly;
-    }
-
-    /**
      * __clone
      *
      * Resets the where object each time the Select is cloned.
@@ -443,6 +400,9 @@ class Select extends AbstractSql implements PreparableSqlInterface, SelectableIn
      */
     public function __clone()
     {
+        if ($this->table) {
+            $this->table  = clone $this->table;
+        }
         $this->where  = clone $this->where;
         $this->having = clone $this->having;
     }

@@ -392,6 +392,107 @@ class Predicate extends PredicateSet
     }
 
     /**
+     * Create "CASE" predicate
+     *
+     * Utilizes Case predicate
+     *  
+     * @param mixed $case
+     * @param mixed $conditions
+     * @param mixed $else
+     * @return self
+     */
+    public function casePredicate($case, $conditions = [], $else = null)
+    {
+        $this->addPredicate(
+            new CasePredicate($case, $conditions, $else),
+            ($this->nextPredicateCombineOperator) ?: $this->defaultCombination
+        );
+        $this->nextPredicateCombineOperator = null;
+
+        return $this;
+    }
+
+    /**
+     * Create "If" predicate
+     *
+     * Utilizes If predicate
+     *  
+     * @param mixed $if
+     * @param mixed $then
+     * @param mixed $else
+     * @return self
+     */
+    public function ifPredicate($if, $then, $else)
+    {
+        $this->addPredicate(
+            new IfPredicate($if, $then, $else),
+            ($this->nextPredicateCombineOperator) ?: $this->defaultCombination
+        );
+        $this->nextPredicateCombineOperator = null;
+
+        return $this;
+    }
+
+    /**
+     * Create "Concat" predicate
+     *
+     * Utilizes Concat predicate
+     *  
+     * @param array $arguments
+     * @return self
+     */
+    public function concat(array $arguments)
+    {
+        $this->addPredicate(
+            new Concat($arguments),
+            ($this->nextPredicateCombineOperator) ?: $this->defaultCombination
+        );
+        $this->nextPredicateCombineOperator = null;
+
+        return $this;
+    }
+
+    /**
+     * Create "Substring" predicate
+     *
+     * Utilizes Substring predicate
+     *  
+     * @param mixed $string
+     * @param mixed $start
+     * @param mixed $len
+     * @return self
+     */
+    public function substring($string, $start = null, $len = null)
+    {
+        $this->addPredicate(
+            new Substring($string, $start, $len),
+            ($this->nextPredicateCombineOperator) ?: $this->defaultCombination
+        );
+        $this->nextPredicateCombineOperator = null;
+
+        return $this;
+    }
+
+    /**
+     * Create "LastInsertedId" predicate
+     *
+     * Utilizes LastInsertedId predicate
+     *  
+     * @param null|string|array|TableIdentifier $table
+     * @return self
+     */
+    public function lastInsertedId($table = null)
+    {
+        $this->addPredicate(
+            new LastInsertedId($table),
+            ($this->nextPredicateCombineOperator) ?: $this->defaultCombination
+        );
+        $this->nextPredicateCombineOperator = null;
+
+        return $this;
+    }
+
+    /**
      * Use given predicate directly
      *
      * Contrary to {@link addPredicate()} this method respects formerly set

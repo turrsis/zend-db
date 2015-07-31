@@ -103,6 +103,24 @@ class Builder extends AbstractBuilder implements SqlBuilderInterface
         'Zend\Db\Sql\Predicate\Predicate'    => [
             'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\PredicateBuilder',
         ],
+        'Zend\Db\Sql\Predicate\CasePredicate'    => [
+            'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\CasePredicateBuilder',
+        ],
+        'Zend\Db\Sql\Predicate\Concat'    => [
+            'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\ConcatBuilder',
+            'postgresql' => 'Zend\Db\Sql\Builder\Postgresql\Predicate\ConcatBuilder',
+        ],
+        'Zend\Db\Sql\Predicate\IfPredicate'    => [
+            'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\IfPredicateBuilder',
+        ],
+        'Zend\Db\Sql\Predicate\LastInsertedId'    => [
+            'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\LastInsertedIdBuilder',
+            'mysql' => 'Zend\Db\Sql\Builder\Mysql\Predicate\LastInsertedIdBuilder',
+        ],
+        'Zend\Db\Sql\Predicate\Substring'    => [
+            'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\SubstringBuilder',
+            'sqlserver' => 'Zend\Db\Sql\Builder\SqlServer\Predicate\SubstringBuilder',
+        ],
         'Zend\Db\Sql\Ddl\Column\Column'  => [
             'sql92' => 'Zend\Db\Sql\Builder\sql92\Ddl\Column\ColumnBuilder',
             'mysql' => 'Zend\Db\Sql\Builder\Mysql\Ddl\Column\ColumnBuilder',

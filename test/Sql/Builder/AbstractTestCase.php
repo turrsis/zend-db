@@ -42,6 +42,11 @@ use Zend\Db\Sql\Builder;
  * @method \Zend\Db\Sql\Predicate\Operator     predicate_Operator($arg0, $arg1, $arg2);
  * @method \Zend\Db\Sql\Predicate\Predicate    predicate_Predicate($arg0, $arg1);
  * @method \Zend\Db\Sql\Predicate\PredicateSet predicate_PredicateSet($arg0, $arg1);
+ * @method \Zend\Db\Sql\Predicate\CasePredicate predicate_Case($case, array $conditions = array(), $else = null);
+ * @method \Zend\Db\Sql\Predicate\Concat      predicate_Concat(array $arguments);
+ * @method \Zend\Db\Sql\Predicate\IfPredicate predicate_If($if, $then, $else);
+ * @method \Zend\Db\Sql\Predicate\LastInsertedId predicate_LastInsertedId($table = null);
+ * @method \Zend\Db\Sql\Predicate\Substring predicate_Substring($string, $start = 0, $len = null);
  *
  * @method \Zend\Db\Sql\Ddl\Index\Index index_Index($arg0, $arg1, $arg2);
  *
@@ -159,11 +164,12 @@ class AbstractTestCase extends \PHPUnit_Framework_TestCase
         }
 
         switch ($platformName) {
-            case 'sql92'     : $platform  = new TestAsset\TrustingSql92Platform();     break;
-            case 'mysql'     : $platform  = new TestAsset\TrustingMysqlPlatform();     break;
-            case 'oracle'    : $platform  = new TestAsset\TrustingOraclePlatform();    break;
-            case 'sqlserver' : $platform  = new TestAsset\TrustingSqlServerPlatform(); break;
-            case 'ibmdb2'    : $platform  = new TestAsset\TrustingIbmDb2Platform(); break;
+            case 'sql92'     : $platform  = new TestAsset\TrustingSql92Platform();      break;
+            case 'mysql'     : $platform  = new TestAsset\TrustingMysqlPlatform();      break;
+            case 'oracle'    : $platform  = new TestAsset\TrustingOraclePlatform();     break;
+            case 'sqlserver' : $platform  = new TestAsset\TrustingSqlServerPlatform();  break;
+            case 'ibmdb2'    : $platform  = new TestAsset\TrustingIbmDb2Platform();     break;
+            case 'postgresql': $platform  = new TestAsset\TrustingPostgresqlPlatform(); break;
             case 'sqlite'    : $platform  = new TestAsset\TrustingSqlitePlatform(); break;
             default : $platform = null;
         }
@@ -239,6 +245,11 @@ class AbstractTestCase extends \PHPUnit_Framework_TestCase
             'predicate_Operator'    => 'Zend\Db\Sql\Predicate\Operator',
             'predicate_Predicate'   => 'Zend\Db\Sql\Predicate\Predicate',
             'predicate_PredicateSet'=> 'Zend\Db\Sql\Predicate\PredicateSet',
+            'predicate_Case'        => 'Zend\Db\Sql\Predicate\CasePredicate',
+            'predicate_Concat'      => 'Zend\Db\Sql\Predicate\Concat',
+            'predicate_If'          => 'Zend\Db\Sql\Predicate\IfPredicate',
+            'predicate_LastInsertedId' => 'Zend\Db\Sql\Predicate\LastInsertedId',
+            'predicate_Substring'   => 'Zend\Db\Sql\Predicate\Substring',
 
             'index_Index'           => 'Zend\Db\Sql\Ddl\Index\Index',
 

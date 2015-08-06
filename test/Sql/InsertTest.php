@@ -69,6 +69,13 @@ class InsertTest extends \PHPUnit_Framework_TestCase
         $this->insert->values(['foo' => 'bax']);
         $this->assertEquals(['foo'], $this->insert->columns);
         $this->assertEquals(['bax'], $this->insert->values);
+
+        $this->insert->columns(['c1', 'c2', 'c3'])
+                ->values(['bar'])
+                ->values(['bam'], Insert::VALUES_MERGE)
+                ->values(['c3' => 'baz'], Insert::VALUES_MERGE);
+        $this->assertEquals(['c1', 'c2', 'c3'], $this->insert->columns);
+        $this->assertEquals(['bar', 'bam', 'baz'], $this->insert->values);
     }
 
     /**

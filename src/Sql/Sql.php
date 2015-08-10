@@ -148,6 +148,54 @@ class Sql
     }
 
     /**
+     * @param null|string|array|TableIdentifier $table
+     * @return Ddl\AlterTable
+     * @throws Exception\InvalidArgumentException
+     */
+    public function alterTable($table = null)
+    {
+        if ($this->table !== null && $table !== null) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'This Sql object is intended to work with only the table "%s" provided at construction time.',
+                $this->table->getTable()
+            ));
+        }
+        return new Ddl\AlterTable($table ?: $this->table);
+    }
+
+    /**
+     * @param null|string|array|TableIdentifier $table
+     * @return Ddl\CreateTable
+     * @throws Exception\InvalidArgumentException
+     */
+    public function createTable($table = null)
+    {
+        if ($this->table !== null && $table !== null) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'This Sql object is intended to work with only the table "%s" provided at construction time.',
+                $this->table->getTable()
+            ));
+        }
+        return new Ddl\CreateTable($table ?: $this->table);
+    }
+
+    /**
+     * @param null|string|array|TableIdentifier $table
+     * @return Ddl\DropTable
+     * @throws Exception\InvalidArgumentException
+     */
+    public function dropTable($table = null)
+    {
+        if ($this->table !== null && $table !== null) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'This Sql object is intended to work with only the table "%s" provided at construction time.',
+                $this->table->getTable()
+            ));
+        }
+        return new Ddl\DropTable($table ?: $this->table);
+    }
+
+    /**
      * @param PreparableSqlInterface $sqlObject
      * @param null|AdapterInterface       $adapter
      *

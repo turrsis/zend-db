@@ -133,6 +133,51 @@ class SqlTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers Zend\Db\Sql\Sql::alterTable
+     */
+    public function testAlterTable()
+    {
+        $alterTable = $this->sql->alterTable();
+
+        $this->assertInstanceOf('Zend\Db\Sql\Ddl\AlterTable', $alterTable);
+        $this->assertSame('foo', $alterTable->table->getTable());
+
+        $this->setExpectedException('Zend\Db\Sql\Exception\InvalidArgumentException',
+            'This Sql object is intended to work with only the table "foo" provided at construction time.');
+        $this->sql->alterTable('bar');
+    }
+
+    /**
+     * @covers Zend\Db\Sql\Sql::createTable
+     */
+    public function testCreateTable()
+    {
+        $createTable = $this->sql->createTable();
+
+        $this->assertInstanceOf('Zend\Db\Sql\Ddl\CreateTable', $createTable);
+        $this->assertSame('foo', $createTable->table->getTable());
+
+        $this->setExpectedException('Zend\Db\Sql\Exception\InvalidArgumentException',
+            'This Sql object is intended to work with only the table "foo" provided at construction time.');
+        $this->sql->createTable('bar');
+    }
+
+    /**
+     * @covers Zend\Db\Sql\Sql::dropTable
+     */
+    public function testDropTable()
+    {
+        $dropTable = $this->sql->dropTable();
+
+        $this->assertInstanceOf('Zend\Db\Sql\Ddl\DropTable', $dropTable);
+        $this->assertSame('foo', $dropTable->table->getTable());
+
+        $this->setExpectedException('Zend\Db\Sql\Exception\InvalidArgumentException',
+            'This Sql object is intended to work with only the table "foo" provided at construction time.');
+        $this->sql->dropTable('bar');
+    }
+
+    /**
      * @covers Zend\Db\Sql\Sql::prepareSqlStatement
      */
     public function testPrepareSqlStatement()

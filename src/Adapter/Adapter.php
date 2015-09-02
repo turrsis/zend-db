@@ -57,6 +57,11 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface
     protected $sqlBuilder;
 
     /**
+     * @var integer
+     */
+    protected $transactionsCount = 0;
+
+    /**
      * @param Driver\DriverInterface|array $driver
      * @param Platform\PlatformInterface $platform
      * @param ResultSet\ResultSetInterface $queryResultPrototype
@@ -401,5 +406,46 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface
             );
         }
         return $profiler;
+    }
+
+    /**
+     * Begin transaction
+     *
+     * @return self
+     */
+    public function beginNestedTransaction()
+    {
+        if ($this->transactionsCount === 0) {
+            $this->getDriver()->getConnection()->beginTransaction();
+        }
+        $this->transactionsCount++;
+        return $this;
+    }
+
+    /**
+     * Commit transaction
+     *
+     * @return self
+     */
+    public function commitNestedTransaction()
+    {
+        if (--$this->transactionsCount === 0) {
+            $this->getDriver()->getConnection()->commit();
+        }
+        return $this;
+    }
+
+    /**
+     * Rollback transaction
+     *
+     * @return self
+     */
+    public function rollbackNestedTransaction()
+    {
+        if ($this->transactionsCount > 0) {
+            $this->getDriver()->getConnection()->rollback();
+        }
+        $this->transactionsCount = 0;
+        return $this;
     }
 }

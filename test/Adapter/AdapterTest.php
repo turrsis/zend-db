@@ -399,6 +399,33 @@ class AdapterTest extends \PHPUnit_Framework_TestCase
         $this->adapter->query(new Select('bar'), Adapter::QUERY_MODE_EXECUTE);
     }
 
+    public function testNestedTransactionCommit()
+    {
+        $this->mockConnection->expects($this->once())->method('beginTransaction');
+        $this->mockConnection->expects($this->once())->method('commit');
+
+        $this->adapter->beginNestedTransaction();
+        $this->adapter->beginNestedTransaction();
+        $this->adapter->beginNestedTransaction();
+        $this->adapter->commitNestedTransaction();
+        $this->adapter->commitNestedTransaction();
+        $this->adapter->commitNestedTransaction();
+    }
+
+    public function testNestedTransactionRollback()
+    {
+        $this->mockConnection->expects($this->once())->method('beginTransaction');
+        $this->mockConnection->expects($this->never())->method('commit');
+
+        $this->adapter->beginNestedTransaction();
+        $this->adapter->beginNestedTransaction();
+        $this->adapter->beginNestedTransaction();
+        $this->adapter->rollbackNestedTransaction();
+        $this->adapter->commitNestedTransaction();
+        $this->adapter->commitNestedTransaction();
+        $this->adapter->commitNestedTransaction();
+    }
+
     /**
      * @covers Zend\Db\Adapter\Adapter::query
      */

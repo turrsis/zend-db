@@ -26,6 +26,8 @@ abstract class AbstractSqlBuilder extends AbstractBuilder
         $this->platformBuilder = $platformBuilder;
     }
 
+    abstract public function build($sqlObject, Context $context);
+
     /**
      * @param string|array $column
      * @param mixed $value

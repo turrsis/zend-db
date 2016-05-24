@@ -74,4 +74,27 @@ class SqlTest extends \PHPUnit_Framework_TestCase
             'This Sql object is intended to work with only the table "foo" provided at construction time.');
         $this->sql->dropTable('bar');
     }
+
+    /**
+     * @covers Zend\Db\Sql\Ddl\Sql::createDatabase
+     */
+    public function testCreateDatabase()
+    {
+        $createDatabase = $this->sql->createDatabase('foo');
+
+        $this->assertInstanceOf('Zend\Db\Sql\Ddl\CreateDatabase', $createDatabase);
+        $this->assertSame('foo', $createDatabase->database);
+    }
+
+    /**
+     * @covers Zend\Db\Sql\Ddl\Sql::dropDatabase
+     */
+    public function testDropDatabase()
+    {
+        $dropDatabase = $this->sql->dropDatabase('foo', true);
+
+        $this->assertInstanceOf('Zend\Db\Sql\Ddl\DropDatabase', $dropDatabase);
+        $this->assertSame('foo', $dropDatabase->database);
+        $this->assertSame(true, $dropDatabase->ifExists);
+    }
 }

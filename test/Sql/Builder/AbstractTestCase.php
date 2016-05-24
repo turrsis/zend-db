@@ -23,6 +23,8 @@ use Zend\Db\Sql\Builder;
  * @method \Zend\Db\Sql\Ddl\DropTable     dropTable(null|string $table)
  * @method \Zend\Db\Sql\Ddl\AlterTable    alterTable(null|string $table)
  * @method \Zend\Db\Sql\Ddl\CreateTable   createTable(null|string $table)
+ * @method \Zend\Db\Sql\Ddl\CreateDatabase createDatabase(null|string $database)
+ * @method \Zend\Db\Sql\Ddl\DropDatabase  dropDatabase(null|string $database)
  * @method \Zend\Db\Sql\Ddl\Column\Column createColumn(null|string $name)
  *
  * @method \Zend\Db\Sql\Expression             expression($expression = '', $parameters = null, array $types = []);
@@ -218,6 +220,8 @@ class AbstractTestCase extends \PHPUnit_Framework_TestCase
             'dropTable'             => 'Zend\Db\Sql\Ddl\DropTable',
             'alterTable'            => 'Zend\Db\Sql\Ddl\AlterTable',
             'createTable'           => 'Zend\Db\Sql\Ddl\CreateTable',
+            'createDatabase'        => 'Zend\Db\Sql\Ddl\CreateDatabase',
+            'dropDatabase'          => 'Zend\Db\Sql\Ddl\DropDatabase',
             'createColumn'          => 'Zend\Db\Sql\Ddl\Column\Column',
 
             'expression'            => 'Zend\Db\Sql\Expression',

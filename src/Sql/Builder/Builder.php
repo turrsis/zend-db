@@ -63,6 +63,12 @@ class Builder extends AbstractBuilder implements SqlBuilderInterface
             'sql92'     => 'Zend\Db\Sql\Builder\sql92\Ddl\DropTableBuilder',
             'sqlserver' => 'Zend\Db\Sql\Builder\SqlServer\Ddl\DropTableBuilder',
         ],
+        'Zend\Db\Sql\Ddl\CreateDatabase'  => [
+            'sql92'     => 'Zend\Db\Sql\Builder\sql92\Ddl\CreateDatabaseBuilder',
+        ],
+        'Zend\Db\Sql\Ddl\DropDatabase'  => [
+            'sql92'     => 'Zend\Db\Sql\Builder\sql92\Ddl\DropDatabaseBuilder',
+        ],
 
         'Zend\Db\Sql\Predicate\NotBetween'      => [
             'sql92' => 'Zend\Db\Sql\Builder\sql92\Predicate\NotBetweenBuilder',

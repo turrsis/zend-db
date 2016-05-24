@@ -46,4 +46,23 @@ class Sql extends BaseSql\AbstractSql
         $this->validateTable($table);
         return new DropTable($table ?: $this->table);
     }
+
+    /**
+     * @param null|string $database
+     * @return CreateDatabase
+     */
+    public function createDatabase($database = null)
+    {
+        return new CreateDatabase($database);
+    }
+
+    /**
+     * @param null|string $database
+     * @param bool $ifExists
+     * @return DropDatabase
+     */
+    public function dropDatabase($database = null, $ifExists = false)
+    {
+        return new DropDatabase($database, $ifExists);
+    }
 }

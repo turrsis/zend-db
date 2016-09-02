@@ -12,6 +12,7 @@ namespace ZendTest\Db\Adapter;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Adapter\Profiler;
 use Zend\Db\Sql\Select;
+use Zend\Db\ResultSet\ResultSet;
 
 class AdapterTest extends \PHPUnit_Framework_TestCase
 {
@@ -306,6 +307,58 @@ class AdapterTest extends \PHPUnit_Framework_TestCase
 
         $r = $this->adapter->query($sql, Adapter::QUERY_MODE_EXECUTE, new TemporaryResultSet());
         $this->assertInstanceOf('ZendTest\Db\Adapter\TemporaryResultSet', $r);
+    }
+
+    public function testQueryRow()
+    {
+        $result = new ResultSet(ResultSet::TYPE_ARRAY);
+        $result->initialize([
+            [
+                'f11' => 'v11',
+                'f12' => 'v12',
+            ],
+            [
+                'f21' => 'v21',
+                'f22' => 'v22',
+            ],
+        ]);
+        $this->mockConnection->expects($this->any())->method('execute')->with('')->will($this->returnValue($result));
+        $this->assertEquals(
+            [
+                'f11' => 'v11',
+                'f12' => 'v12',
+            ],
+            $this->adapter->queryRow('')
+        );
+    }
+
+    public function testQueryScalarWithArrayResultSet()
+    {
+        $result = new ResultSet(ResultSet::TYPE_ARRAY);
+        $result->initialize([
+            ['f11' => 'v11', 'f12' => 'v12'],
+            ['f21' => 'v21', 'f22' => 'v22'],
+        ]);
+        $this->mockConnection->expects($this->any())->method('execute')->with('')->will($this->returnValue($result));
+
+        $this->assertEquals(
+            'v11',
+            $this->adapter->queryScalar('')
+        );
+    }
+
+    public function testQueryScalarWithObjectResultSet()
+    {
+        $result = new ResultSet();
+        $result->initialize([
+            ['f11' => 'v11', 'f12' => 'v12'],
+            ['f21' => 'v21', 'f22' => 'v22'],
+        ]);
+        $this->mockConnection->expects($this->any())->method('execute')->with('')->will($this->returnValue($result));
+        $this->assertEquals(
+            'v11',
+            $this->adapter->queryScalar('')
+        );
     }
 
     /**

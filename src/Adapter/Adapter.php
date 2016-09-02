@@ -230,6 +230,25 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface
         return $result;
     }
 
+    public function queryRow($sql, $parametersOrQueryMode = self::QUERY_MODE_EXECUTE)
+    {
+        $res = $this->query($sql, $parametersOrQueryMode);
+        if ($res->count() != 0) {
+            return $res->current();
+        }
+        return;
+    }
+
+    public function queryScalar($sql, $parametersOrQueryMode = self::QUERY_MODE_EXECUTE)
+    {
+        if (($res = $this->queryRow($sql, $parametersOrQueryMode)) != null) {
+            return is_array($res)
+                ? current($res)
+                : $res->getIterator()->current();
+        }
+        return;
+    }
+
     /**
      * Create statement
      *
